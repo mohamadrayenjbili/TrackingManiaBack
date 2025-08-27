@@ -76,12 +76,11 @@ public class InterventionController : ControllerBase
     {
         try
         {
-            if (id != intervention.Id)
-                return BadRequest("L'ID de l'URL ne correspond pas à l'ID de l'intervention");
-
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
+            // Utiliser l'ID de l'URL comme source de vérité
+            intervention.Id = id;
             await _interventionService.UpdateInterventionAsync(intervention);
             return NoContent();
         }

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using TrackMania.Interfaces;
 using TrackMania.Models;
+using TrackMania.DTOs;
 
 namespace TrackMania.Controllers;
 
@@ -34,12 +35,32 @@ public class IngenieurController : ControllerBase
 
     // POST: api/Ingenieur
     [HttpPost]
-    public async Task<ActionResult<Ingenieur>> Create([FromBody] Ingenieur ingenieur)
+    public async Task<ActionResult<Ingenieur>> Create([FromBody] IngenieurCreateDto dto)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
-        await _unitOfWork.Ingenieurs.AddAsync(ingenieur);
+        Ingenieur entity;
+        if (dto.IsAdmin)
+        {
+            entity = new Admin
+            {
+                Nom = dto.Nom,
+                Photo = dto.Photo,
+                DepartementId = dto.DepartementId
+            };
+        }
+        else
+        {
+            entity = new Ingenieur
+            {
+                Nom = dto.Nom,
+                Photo = dto.Photo,
+                DepartementId = dto.DepartementId
+            };
+        }
+
+        await _unitOfWork.Ingenieurs.AddAsync(entity);
         await _unitOfWork.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetById), new { id = ingenieur.Id }, ingenieur);
+        return CreatedAtAction(nameof(GetById), new { id = entity.Id }, entity);
     }
 
     // PUT: api/Ingenieur/5

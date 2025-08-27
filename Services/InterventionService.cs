@@ -33,6 +33,10 @@ public class InterventionService : IInterventionService
         if (intervention.HeuresTravaillees <= 0)
             throw new ArgumentException("Les heures travaillées doivent être positives");
 
+        // Normaliser les DateTime en UTC pour PostgreSQL (timestamptz)
+        intervention.DateDebut = NormalizeUtc(intervention.DateDebut);
+        intervention.DateFin = NormalizeUtc(intervention.DateFin);
+
         await _unitOfWork.Interventions.AddAsync(intervention);
         await _unitOfWork.SaveChangesAsync();
         return intervention;
@@ -48,7 +52,22 @@ public class InterventionService : IInterventionService
         if (intervention.DateDebut >= intervention.DateFin)
             throw new ArgumentException("La date de début doit être antérieure à la date de fin");
 
-        await _unitOfWork.Interventions.UpdateAsync(intervention);
+        // Normaliser les DateTime en UTC pour PostgreSQL (timestamptz)
+        intervention.DateDebut = NormalizeUtc(intervention.DateDebut);
+        intervention.DateFin = NormalizeUtc(intervention.DateFin);
+
+        // Mettre à jour l'instance suivie pour éviter les conflits de suivi EF Core
+        existing.DateDebut = intervention.DateDebut;
+        existing.DateFin = intervention.DateFin;
+        existing.HeuresTravaillees = intervention.HeuresTravaillees;
+        existing.HeuresPayees = intervention.HeuresPayees;
+        existing.HeuresNonPayees = intervention.HeuresNonPayees;
+        existing.Notes = intervention.Notes;
+        existing.IngenieurId = intervention.IngenieurId;
+        existing.AdminId = intervention.AdminId;
+        existing.SocieteId = intervention.SocieteId;
+
+        await _unitOfWork.Interventions.UpdateAsync(existing);
         await _unitOfWork.SaveChangesAsync();
     }
 
@@ -91,8 +110,10 @@ public class InterventionService : IInterventionService
 
     public async Task<IEnumerable<Intervention>> GetInterventionsByDateRangeAsync(DateTime startDate, DateTime endDate)
     {
+        var startUtc = NormalizeUtc(startDate);
+        var endUtc = NormalizeUtc(endDate);
         return await _unitOfWork.Interventions.FindAsync(i => 
-            i.DateDebut >= startDate && i.DateFin <= endDate);
+            i.DateDebut >= startUtc && i.DateFin <= endUtc);
     }
 
     // Statistics
@@ -113,4 +134,15 @@ public class InterventionService : IInterventionService
         var interventions = await _unitOfWork.Interventions.GetAllAsync();
         return interventions.Sum(i => i.HeuresNonPayees);
     }
+
+    // Helpers
+    private static DateTime NormalizeUtc(DateTime dateTime)
+    {
+        if (dateTime.Kind == DateTimeKind.Utc)
+            return dateTime;
+        if (dateTime.Kind == DateTimeKind.Local)
+            return dateTime.ToUniversalTime();
+        return DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);
+    }
 }
+

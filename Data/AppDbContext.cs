@@ -46,7 +46,7 @@ public class AppDbContext : DbContext
             .HasOne(iv => iv.Admin!)
             .WithMany()
             .HasForeignKey(iv => iv.AdminId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.SetNull);
 
         modelBuilder.Entity<Societe>()
             .HasMany(s => s.Factures)

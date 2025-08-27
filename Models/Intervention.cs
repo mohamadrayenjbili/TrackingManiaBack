@@ -13,7 +13,7 @@ public class Intervention
     public int IngenieurId { get; set; }
     public Ingenieur? Ingenieur { get; set; }
 
-    public int AdminId { get; set; }
+    public int? AdminId { get; set; }
     public Admin? Admin { get; set; }
 
     public int SocieteId { get; set; }
