@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore.Storage;
 using TrackMania.Data;
 using TrackMania.Interfaces;
+using TrackMania.Models;
 
 namespace TrackMania.Repositories;
 

@@ -1,3 +1,5 @@
+using TrackMania.Models;
+
 namespace TrackMania.Interfaces;
 
 public interface IUnitOfWork : IDisposable

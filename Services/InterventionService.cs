@@ -48,7 +48,7 @@ public class InterventionService : IInterventionService
         if (intervention.DateDebut >= intervention.DateFin)
             throw new ArgumentException("La date de début doit être antérieure à la date de fin");
 
-        _unitOfWork.Interventions.Update(intervention);
+        await _unitOfWork.Interventions.UpdateAsync(intervention);
         await _unitOfWork.SaveChangesAsync();
     }
 
