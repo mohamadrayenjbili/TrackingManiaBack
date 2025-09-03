@@ -35,32 +35,35 @@ public class IngenieurController : ControllerBase
 
     // POST: api/Ingenieur
     [HttpPost]
-    public async Task<ActionResult<Ingenieur>> Create([FromBody] IngenieurCreateDto dto)
+    public async Task<ActionResult<object>> Create([FromBody] IngenieurCreateDto dto)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
-        Ingenieur entity;
         if (dto.IsAdmin)
         {
-            entity = new Admin
+            var admin = new Admin
             {
-                Nom = dto.Nom,
-                Photo = dto.Photo,
-                DepartementId = dto.DepartementId
+                Username = dto.Username,
+                Email = dto.Email,
+                Password = dto.Password
             };
+            await _unitOfWork.Admins.AddAsync(admin);
+            await _unitOfWork.SaveChangesAsync();
+            return Created(string.Empty, admin);
         }
         else
         {
-            entity = new Ingenieur
+            var ingenieur = new Ingenieur
             {
-                Nom = dto.Nom,
+                Username = dto.Username,
+                Email = dto.Email,
+                Password = dto.Password,
                 Photo = dto.Photo,
                 DepartementId = dto.DepartementId
             };
+            await _unitOfWork.Ingenieurs.AddAsync(ingenieur);
+            await _unitOfWork.SaveChangesAsync();
+            return CreatedAtAction(nameof(GetById), new { id = ingenieur.Id }, ingenieur);
         }
-
-        await _unitOfWork.Ingenieurs.AddAsync(entity);
-        await _unitOfWork.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetById), new { id = entity.Id }, entity);
     }
 
     // PUT: api/Ingenieur/5
@@ -74,7 +77,7 @@ public class IngenieurController : ControllerBase
         if (existing == null) return NotFound();
 
         // Mettre à jour les champs autorisés
-        existing.Nom = ingenieur.Nom;
+        existing.Username = ingenieur.Username;
         existing.Photo = ingenieur.Photo;
         existing.DepartementId = ingenieur.DepartementId;
 

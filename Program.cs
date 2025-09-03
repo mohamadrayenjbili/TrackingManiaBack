@@ -28,11 +28,11 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-// Ensure database is created at startup
+// Apply migrations at startup
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.EnsureCreated();
+    db.Database.Migrate();
 }
 
 // Configure the HTTP request pipeline.

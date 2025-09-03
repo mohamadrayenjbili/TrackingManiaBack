@@ -8,6 +8,9 @@ public class Facture
     public DateTime DateEmission { get; set; }
     public int SocieteId { get; set; }
     public Societe? Societe { get; set; }
+
+    public int IngenieurId { get; set; }
+    public Ingenieur? Ingenieur { get; set; }
 }
 
 

@@ -6,7 +6,8 @@ public class KPI
     public string Nom { get; set; } = string.Empty;
     public double Valeur { get; set; }
     public string Type { get; set; } = string.Empty;
-    public int? AdminId { get; set; }
+    public DateTime DateMesure { get; set; }
+    public int AdminId { get; set; }
     public Admin? Admin { get; set; }
 }
 

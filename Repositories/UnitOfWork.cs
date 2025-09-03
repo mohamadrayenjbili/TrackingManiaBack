@@ -18,6 +18,7 @@ public class UnitOfWork : IUnitOfWork
     private IRepository<Intervention>? _interventions;
     private IRepository<Facture>? _factures;
     private IRepository<KPI>? _kpis;
+    private IRepository<Equipe>? _equipes;
 
     public UnitOfWork(AppDbContext context)
     {
@@ -45,6 +46,9 @@ public class UnitOfWork : IUnitOfWork
     
     public IRepository<KPI> KPIs => 
         _kpis ??= new Repository<KPI>(_context);
+
+    public IRepository<Equipe> Equipes => 
+        _equipes ??= new Repository<Equipe>(_context);
 
     // Transaction Management
     public async Task BeginTransactionAsync()

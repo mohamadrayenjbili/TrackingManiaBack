@@ -7,6 +7,7 @@ public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
+    public DbSet<User> Users => Set<User>();
     public DbSet<Ingenieur> Ingenieurs => Set<Ingenieur>();
     public DbSet<Admin> Admins => Set<Admin>();
     public DbSet<Departement> Departements => Set<Departement>();
@@ -14,13 +15,16 @@ public class AppDbContext : DbContext
     public DbSet<Intervention> Interventions => Set<Intervention>();
     public DbSet<Facture> Factures => Set<Facture>();
     public DbSet<KPI> KPIs => Set<KPI>();
+    public DbSet<Equipe> Equipes => Set<Equipe>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<Ingenieur>()
+        // Inheritance: User -> Admin/Ingenieur (TPH)
+        modelBuilder.Entity<User>()
             .HasDiscriminator<string>("Discriminator")
+            .HasValue<User>("User")
             .HasValue<Ingenieur>("Ingenieur")
             .HasValue<Admin>("Admin");
 
@@ -41,6 +45,31 @@ public class AppDbContext : DbContext
             .WithOne(k => k.Admin!)
             .HasForeignKey(k => k.AdminId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        // Departement has many Equipes (explicit FK)
+        modelBuilder.Entity<Departement>()
+            .HasMany(d => d.Equipes)
+            .WithOne(e => e.Departement!)
+            .HasForeignKey(e => e.DepartementId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Equipe managed by Admin, has many Ingenieurs (many-to-many)
+        modelBuilder.Entity<Equipe>()
+            .HasOne(e => e.Admin!)
+            .WithMany()
+            .HasForeignKey(e => e.AdminId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Equipe>()
+            .HasMany(e => e.Ingenieurs)
+            .WithMany(i => i.Equipes);
+
+        // Facture for Ingenieur
+        modelBuilder.Entity<Facture>()
+            .HasOne(f => f.Ingenieur!)
+            .WithMany()
+            .HasForeignKey(f => f.IngenieurId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Intervention>()
             .HasOne(iv => iv.Admin!)

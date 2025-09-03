@@ -12,6 +12,7 @@ public interface IUnitOfWork : IDisposable
     IRepository<Intervention> Interventions { get; }
     IRepository<Facture> Factures { get; }
     IRepository<KPI> KPIs { get; }
+    IRepository<Equipe> Equipes { get; }
     
     // Transaction Management
     Task<int> SaveChangesAsync();
