@@ -38,17 +38,54 @@ public class IngenieurController : ControllerBase
     public async Task<ActionResult<object>> Create([FromBody] IngenieurCreateDto dto)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
+
+        // Unicity checks on username and email across all users
+        var existingUserByUsername = (await _unitOfWork.Ingenieurs.FindAsync(u => u.Username == dto.Username))
+            .Cast<User>()
+            .Concat((await _unitOfWork.Admins.FindAsync(u => u.Username == dto.Username)))
+            .FirstOrDefault();
+        if (existingUserByUsername != null)
+        {
+            return Conflict("Le nom d'utilisateur existe déjà");
+        }
+        var existingUserByEmail = (await _unitOfWork.Ingenieurs.FindAsync(u => u.Email == dto.Email))
+            .Cast<User>()
+            .Concat((await _unitOfWork.Admins.FindAsync(u => u.Email == dto.Email)))
+            .FirstOrDefault();
+        if (existingUserByEmail != null)
+        {
+            return Conflict("L'email existe déjà");
+        }
+
+        // Validate departement existence
+        var departement = await _unitOfWork.Departements.GetByIdAsync(dto.DepartementId);
+        if (departement == null)
+        {
+            return BadRequest("Le département spécifié n'existe pas");
+        }
+
+        // Hash password
+        var hashedPassword = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+
         if (dto.IsAdmin)
         {
             var admin = new Admin
             {
                 Username = dto.Username,
                 Email = dto.Email,
-                Password = dto.Password
+                Password = hashedPassword,
+                Photo = dto.Photo,
+                DepartementId = dto.DepartementId
             };
             await _unitOfWork.Admins.AddAsync(admin);
             await _unitOfWork.SaveChangesAsync();
-            return Created(string.Empty, admin);
+            return Created(string.Empty, new {
+                id = admin.Id,
+                username = admin.Username,
+                email = admin.Email,
+                departementId = admin.DepartementId,
+                isAdmin = true
+            });
         }
         else
         {
@@ -56,13 +93,19 @@ public class IngenieurController : ControllerBase
             {
                 Username = dto.Username,
                 Email = dto.Email,
-                Password = dto.Password,
+                Password = hashedPassword,
                 Photo = dto.Photo,
                 DepartementId = dto.DepartementId
             };
             await _unitOfWork.Ingenieurs.AddAsync(ingenieur);
             await _unitOfWork.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetById), new { id = ingenieur.Id }, ingenieur);
+            return CreatedAtAction(nameof(GetById), new { id = ingenieur.Id }, new {
+                id = ingenieur.Id,
+                username = ingenieur.Username,
+                email = ingenieur.Email,
+                departementId = ingenieur.DepartementId,
+                isAdmin = false
+            });
         }
     }
 
